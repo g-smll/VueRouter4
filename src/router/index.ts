@@ -1,5 +1,6 @@
-import {createRouter, createWebHistory} from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteLocationNormalized } from 'vue-router'
+import sourceData from '@/db/data.json'
 
 const routes = [
     {
@@ -15,6 +16,26 @@ const routes = [
             ...route.params,
             id: Number(route.params.id)
         }),
+        beforeEnter: (to: RouteLocationNormalized) => {
+            const exists = sourceData.destinations.find(
+                destination => destination.id === Number(to.params.id)
+            );
+            if (!exists) {
+                return {
+                    name: 'NotFound',
+                    params: { 
+                        pathMatch: to.path.split('/').slice(1),
+                        originalId: to.params.id,
+                        originalSlug: to.params.slug
+                    },
+                    query: { 
+                        ...to.query,
+                        error: 'destination-not-found'
+                    },
+                    hash: to.hash
+                };
+            }
+        },
         children: [
             {
                 path: ':experienceSlug',
@@ -26,12 +47,22 @@ const routes = [
                 })
             }
         ]
+    },
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: () => import('@/views/NotFound.vue')
     }
 ]
 
 const router = createRouter({
     history: createWebHistory(),
-    routes
+    routes,
+    scrollBehavior(_to, _from, savedPosition) {
+        return savedPosition || new Promise((resolve) => {
+            setTimeout(() => resolve({ top: 0 ,behavior: 'smooth'}), 300)
+        })
+    }
 })
 
 export default router
