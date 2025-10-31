@@ -49,6 +49,19 @@ const routes = [
         ]
     },
     {
+        path: '/login',
+        name: 'Login',
+        component: () => import('@/views/Login.vue')
+    },
+    {
+        path: '/protected',
+        name: 'Protected',
+        component: () => import('@/views/Protected.vue'),
+        meta: {
+            requiresAuth: true
+        }
+    },
+    {
         path: '/:pathMatch(.*)*',
         name: 'NotFound',
         component: () => import('@/views/NotFound.vue')
@@ -63,6 +76,14 @@ const router = createRouter({
             setTimeout(() => resolve({ top: 0 ,behavior: 'smooth'}), 300)
         })
     }
+})
+
+router.beforeEach((to, _from, next) => {
+    if (to.meta.requiresAuth && !window.user) {
+        return next({ name: 'Login' })
+    }
+    
+    next()
 })
 
 export default router
